@@ -4,9 +4,11 @@ from fastapi import FastAPI, UploadFile
 from fastapi.responses import FileResponse
 from os import listdir
 from os.path import isfile, join
+from urllib.parse import quote
 import uuid
 
 IMAGEDIR = "images/"
+SERVER_URL = "http://localhost:8000"
 
 app = FastAPI()
 
@@ -44,5 +46,5 @@ async def get_images():
     image_files = [f for f in listdir(IMAGEDIR) if isfile(join(IMAGEDIR, f))]
     image_list = []
     for filename in image_files:
-        image_list.append({"filename": filename, "url": f"/images/{filename}"})
+        image_list.append({"filename": filename, "url": f"{SERVER_URL}/images/{quote(filename)}"})
     return image_list
