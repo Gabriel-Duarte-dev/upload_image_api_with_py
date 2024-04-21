@@ -1,14 +1,16 @@
+import zipfile
+import uuid
 from typing import Union
-
-from fastapi import FastAPI, UploadFile
+from fastapi import FastAPI, UploadFile, File
 from fastapi.responses import FileResponse
+import os
 from os import listdir
 from os.path import isfile, join
 from urllib.parse import quote
-import uuid
+from fastapi.responses import StreamingResponse
 
 IMAGEDIR = "images/"
-SERVER_URL = "http://localhost:8000"
+SERVER_URL = "http://127.0.0.1:8000/"
 
 app = FastAPI()
 
@@ -45,6 +47,25 @@ async def uploadImages(files: list[UploadFile]):
 async def get_images():
     image_files = [f for f in listdir(IMAGEDIR) if isfile(join(IMAGEDIR, f))]
     image_list = []
+
     for filename in image_files:
         image_list.append({"filename": filename, "url": f"{SERVER_URL}/images/{quote(filename)}"})
     return image_list
+
+@app.get("/images/")
+async def get_images():
+    image_files = [f for f in listdir(IMAGEDIR) if isfile(join(IMAGEDIR, f))]
+    image_list = []
+
+    for file in image_files:
+        image_list.append(FileResponse(file))
+    return image_list
+
+@app.get("/download-images/")
+async def download_images():
+    image_files = [f for f in os.listdir(IMAGEDIR) if os.path.isfile(os.path.join(IMAGEDIR, f))]
+    zip_path = "images.zip"
+    with zipfile.ZipFile(zip_path, "w") as zipf:
+        for image_file in image_files:
+            zipf.write(os.path.join(IMAGEDIR, image_file), image_file)
+    return StreamingResponse(open(zip_path, "rb"), media_type="application/zip", headers={"Content-Disposition": "attachment; filename=images.zip"})
