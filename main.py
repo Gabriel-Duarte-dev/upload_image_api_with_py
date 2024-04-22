@@ -1,19 +1,21 @@
 import zipfile
 import uuid
+import os
 from typing import Union
 from fastapi import FastAPI, UploadFile, File
 from fastapi.responses import FileResponse
-import os
 from os import listdir
 from os.path import isfile, join
 from urllib.parse import quote
 from fastapi.responses import StreamingResponse
+from dotenv import load_dotenv
+
+load_dotenv()
 
 IMAGEDIR = "images/"
-SERVER_URL = "http://127.0.0.1:8000/"
 
 app = FastAPI()
-
+env = os.environ
 
 @app.get("/")
 def read_root():
@@ -49,7 +51,7 @@ async def get_images():
     image_list = []
 
     for filename in image_files:
-        image_list.append({"filename": filename, "url": f"{SERVER_URL}/images/{quote(filename)}"})
+        image_list.append({"filename": filename, "url": f"{env.get('SERVER_URL')}/images/{quote(filename)}"})
     return image_list
 
 @app.get("/images/")
